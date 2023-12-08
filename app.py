@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from database import create_listing
 
 app = Flask(__name__)
 
@@ -8,9 +9,24 @@ def get_todos():
     return jsonify({'message': "welcome to hemnet!"})
 
 
-@app.route('/todos', methods=['GET'])
-def get_todos():
-    return jsonify({'todos': "hej world"})
+@app.route('/listing', methods=['GET'])
+def get_listing():
+    data = request.get_json()
+    return jsonify(create_listing(data['name'], data['price'], data['description'], data['category_id'], data['broker_id']))
+
+# Create a listing
+
+
+@app.route('/listing', methods=['POST'])
+def create_listing_route():
+    data = request.get_json()
+    name = data['name']
+    price = data['price']
+    description = data['description']
+    category_id = data['category_id']
+    broker_id = data['broker_id']
+    create_listing(name, price, description, category_id, broker_id)
+    return jsonify({'message': "created listing successfully"})
 
 
 # app.run(debug=True) default way

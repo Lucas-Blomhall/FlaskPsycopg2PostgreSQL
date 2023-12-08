@@ -100,10 +100,23 @@ else:
 print(f"Table {table_name} exists: {check_if_exists(table_name)}")
 
 
-def create_listing():
+# Starting CRUD:
+
+
+# Create a listing:
+
+def create_listing(name, price, description, category_id, broker_id):
     """Creates a new listing in the database."""
     # Implement the SQL query to insert a new listing
-    pass
+    try:
+        db.execute(
+            "INSERT INTO listing (name, price, description, category_id, broker_id) VALUES (%s, %s, %s, %s, %s)", (name, price, description, category_id, broker_id))
+        client.commit()
+        print("Created listing successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
 def delete_listing(connection):
