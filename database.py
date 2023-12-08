@@ -102,9 +102,9 @@ print(f"Table {table_name} exists: {check_if_exists(table_name)}")
 
 # Starting CRUD:
 
+# Listing: CRUD:
 
 # Create a listing:
-
 def create_listing(name, price, description, category_id, broker_id):
     """Creates a new listing in the database."""
     # Implement the SQL query to insert a new listing
@@ -119,45 +119,116 @@ def create_listing(name, price, description, category_id, broker_id):
         return False
 
 
-def delete_listing(connection):
+# Delete a listing
+def delete_listing(id):
     """Deletes a listing from the database."""
-    pass
+    try:
+        db.execute(
+            "DELETE FROM listing WHERE id = %s", (id,))
+        client.commit()
+        print("Deleted listing successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
-def view_listing(connection):
+# Get a listing
+def view_listing():
     """Retrieves details of a specific listing along with category and broker information."""
     # Implement the SQL query to retrieve listing details with JOIN
-    pass
+    try:
+        db.execute("SELECT * FROM listing ORDER BY id ASC")
+        print("Got all listing successfully")
+        return db.fetchall()  # Den returnar alla todos
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        return False
 
 
-def create_category(connection):
+# Category: CRUD
+
+# Create Category
+def create_category(name):
     """Creates a new category in the database."""
-    pass
+    try:
+        db.execute(
+            "INSERT INTO category (name) VALUES (%s)", (name,))
+        client.commit()
+        print("Created category successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
-def update_category(connection):
+# Update a category by id
+def update_category(id, name):
     """Updates an existing category."""
-    pass
+    try:
+        db.execute(
+            "Update category SET title = %s, description = %s, WHERE id = %s", (id, name))
+        client.commit()
+        print("Updated category by id successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        return False
 
 
-def create_broker(connection):
+# broker: CRUD
+
+# Create a broker
+def create_broker(name, email, contact_info):
     """Creates a new broker in the database."""
-    pass
+    try:
+        db.execute(
+            "INSERT INTO broker (name, email, contact_info) VALUES (%s, %s, %s)", (name, email, contact_info))
+        client.commit()
+        print("Created category successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
-def update_broker(connection):
+# Update a broker by id
+def update_broker(id, name, email, contact_info):
     """Updates an existing broker."""
-    pass
+    try:
+        db.execute(
+            "Update broker SET name = %s, email = %s, contact_info = %s, WHERE id = %s", (id, name, email, contact_info))
+        client.commit()
+        print("Updated category by id successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        return False
 
 
-def create_customer(connection):
+# create a customer
+def create_customer(name, email, contact_info):
     """Creates a new customer in the database."""
-    pass
+    try:
+        db.execute(
+            "INSERT INTO customer (name, email, contact_info) VALUES (%s, %s, %s)", (name, email, contact_info))
+        client.commit()
+        print("Created customer successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
-def delete_customer(connection):
+def delete_customer(id):
     """Deletes a customer from the database."""
-    pass
+    try:
+        db.execute(
+            "DELETE FROM customer WHERE id = %s", (id,))
+        client.commit()
+        print("Deleted customer successfully")
+    except psycopg2.Error as e:
+        print("Error: ", e)
+        client.rollback()
+        return False
 
 
 def create_appointment(connection):
