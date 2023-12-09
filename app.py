@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from database import create_category, create_listing, update_listing, view_customer, view_listing, delete_listing, view_listing_by_id
+from database import create_broker, create_category, create_customer, create_listing, delete_broker, delete_category, delete_customer, update_broker, update_category, update_customer, update_listing, view_broker, view_broker_by_id, view_category, view_category_by_id, view_customer, view_customer_by_id, view_listing, delete_listing, view_listing_by_id
 
 app = Flask(__name__)
 
@@ -8,6 +8,8 @@ app = Flask(__name__)
 def get_todos():
     return jsonify({'message': "welcome to hemnet!"})
 
+
+# ====================================== FORMATS for read ================================================
 
 # Vi kör en foreach loop där vi kollar igenom alla värdena för  att kunna formatera värderna
 # listing
@@ -21,9 +23,16 @@ def format_listing(listings):
         'broker_id': listing['broker_id']
     } for listing in listings]
 
+
+# category
+def format_category(categorys):
+    return [{
+        'id': category['id'],
+        'name': category['name']
+    } for category in categorys]
+
+
 # customer
-
-
 def format_customer(customers):
     return [{
         'id': customer['id'],
@@ -32,6 +41,20 @@ def format_customer(customers):
         'contact_info': customer['contact_info']
     } for customer in customers]
 
+
+# broker
+def format_broker(brokers):
+    return [{
+        'id': broker['id'],
+        'name': broker['name'],
+        'email': broker['email'],
+        'contact_info': broker['contact_info']
+    } for broker in brokers]
+
+
+# =========================================== CRUD operation START =================================================
+
+# =========================================== listing crud =================================================
 
 # Create listing
 @app.route('/listing', methods=['POST'])
@@ -50,17 +73,6 @@ def add_listing_route():
 
 
 # Read listing
-@app.route('/listing/<int:id>', methods=['GET'])
-def listing_detail_route(id):
-    """
-    Endpoint to return a specific listing
-    """
-    selected_listing = view_listing_by_id(id)
-    new_listing = format_listing(selected_listing)
-    return jsonify(new_listing), 200
-
-
-# Read listing
 @app.route('/listing', methods=['GET'])
 def get_all_listings_route():
     """
@@ -68,6 +80,17 @@ def get_all_listings_route():
     """
     listings = view_listing()
     new_listing = format_listing(listings)
+    return jsonify(new_listing), 200
+
+
+# Read listing by id
+@app.route('/listing/<int:id>', methods=['GET'])
+def listing_detail_route(id):
+    """
+    Endpoint to return a specific listing
+    """
+    selected_listing = view_listing_by_id(id)
+    new_listing = format_listing(selected_listing)
     return jsonify(new_listing), 200
 
 
@@ -103,6 +126,9 @@ def remove_listing_route(id):
     return jsonify({'message': "deleted listing successfully"}), 200
 
 
+# =========================================== Category crud =================================================
+
+# Create category
 @app.route('/category', methods=['POST'])
 def add_category_route():
     """
@@ -115,22 +141,276 @@ def add_category_route():
     return jsonify({'message': "created listing successfully"}), 201
 
 
-def add_category():
+# Read category
+@app.route('/category', methods=['GET'])
+def get_all_category_route():
+    """
+    Should return a list of X number of category based on a LIMIT
+    """
+    selected_category = view_category()
+    new_category = format_category(selected_category)
+    return jsonify(new_category), 200
 
-    pass
+
+# Read category by id error uncomment later
+@app.route('/category/<int:id>', methods=['GET'])
+def category_detail_route(id):
+    """
+    Endpoint to return a specific listing
+    """
+    selected_category = view_category_by_id(id)
+    new_category = format_category(selected_category)
+    return jsonify(new_category), 200
 
 
+# Update category
 @app.route('/category/<int:id>', methods=['PUT'])
-def update_category_route():
+def update_category_route(id):
     """
     Endpoint to update a category
     Get updated category details from customer and call db.update_category
     """
-    data = request.get_json()
+    data = request.get_json()  # Hämtar data från Postman
+    name = data['name']
 
-    selected_category = view_listing_by_id(id)
-    new_category = format_listing(selected_category)
-    return jsonify(new_category), 200
+    success = update_category(
+        id, name)
+
+    if success == True:
+        return jsonify({'message': "Updated listing successfully"}), 200
+    else:
+        return jsonify({'message': "Failed to update listing"}), 400
+
+
+# Delete category
+@app.route('/category/<int:id>', methods=['DELETE'])
+def remove_category_route(id):
+    """
+    Endpoint to remove a category
+    """
+    if delete_category(id):
+        return jsonify({'message': "Deleted category successfully"}), 200
+    else:
+        return jsonify({'message': "Category not found or deletion failed"}), 404
+
+
+# =========================================== Broker crud =================================================
+
+# Create broker
+@app.route('/broker', methods=['POST'])
+def add_broker_route():
+    """
+    Endpoint to add a new broker
+    Get broker details from broker and call db.create_broker
+    """
+    data = request.get_json()
+    name = data['name']
+    email = data['email']
+    contact_info = data['contact_info']
+    create_broker(name, email, contact_info)
+    return jsonify({'message': "created listing successfully"}), 201
+
+
+# Read all from broker
+@app.route('/broker', methods=['GET'])
+def get_all_broker_route():
+    """
+    Should return a list of X number of broker based on a LIMIT
+    """
+    selected_broker = view_broker()
+    new_broker = format_broker(selected_broker)
+    return jsonify(new_broker), 200
+
+
+# Read broker by id
+@app.route('/broker/<int:id>', methods=['GET'])
+def broker_detail_route(id):
+    """
+    Endpoint to return a specific broker
+    """
+    selected_broker = view_broker_by_id(id)
+    new_broker = format_broker(selected_broker)
+    return jsonify(new_broker), 200
+
+
+# This did not work!
+# Update broker
+@app.route('/broker/<int:id>', methods=['PUT'])
+def update_broker_route(id):
+    """
+    Endpoint to update an existing broker
+    """
+    data = request.get_json()  # Hämtar data från Postman
+    name = data['name']
+    email = data['email']
+    contact_info = data['contact_info']
+
+    success = update_broker(
+        id, name, email, contact_info)
+
+    if success == True:
+        return jsonify({'message': "Updated broker successfully"}), 200
+    else:
+        return jsonify({'message': "Failed to update broker"}), 400
+
+
+# Delete broker by id
+@app.route('/broker/<int:id>', methods=['DELETE'])
+def remove_broker_route(id):
+    """
+    Endpoint to remove a category
+    """
+    if delete_broker(id):
+        return jsonify({'message': "Deleted broker successfully"}), 200
+    else:
+        return jsonify({'message': "Broker not found or deletion failed"}), 404
+
+
+# =========================================== Customer crud =================================================
+
+# Create customer
+@app.route('/customer', methods=['POST'])
+def add_customer_route():
+    """
+    Endpoint to add a new customer
+    Get customer details from customer and call db.create_customer
+    """
+    data = request.get_json()
+    name = data['name']
+    email = data['email']
+    contact_info = data['contact_info']
+    create_customer(name, email, contact_info)
+    return jsonify({'message': "created customer successfully"}), 201
+
+
+# Read all from customer
+@app.route('/customer', methods=['GET'])
+def get_all_customer_route():
+    """
+    Endpoint to list all customer
+    """
+    customers = view_customer()
+    new_customer = format_customer(customers)
+    return jsonify(new_customer), 200
+
+
+# Read customer by id
+@app.route('/customer/<int:id>', methods=['GET'])
+def customer_detail_route(id):
+    """
+    Endpoint to return a specific customer
+    """
+    selected_customer = view_customer_by_id(id)
+    new_customer = format_customer(selected_customer)
+    return jsonify(new_customer), 200
+
+
+# Update customer
+@app.route('/customer/<int:id>', methods=['PUT'])
+def update_customer_route(id):
+    """
+    Endpoint to update an existing customer
+    """
+    data = request.get_json()  # Hämtar data från Postman
+    name = data['name']
+    email = data['email']
+    contact_info = data['contact_info']
+
+    success = update_customer(
+        id, name, email, contact_info)
+
+    if success == True:
+        return jsonify({'message': "Updated customer successfully"}), 200
+    else:
+        return jsonify({'message': "Failed to update customer"}), 400
+
+
+# Delete customer by id
+@app.route('/customer/<int:id>', methods=['DELETE'])
+def remove_customer_route(id):
+    """
+    Endpoint to remove a customer
+    """
+    if delete_customer(id):
+        return jsonify({'message': "Deleted customer successfully"}), 200
+    else:
+        return jsonify({'message': "Customer not found or deletion failed"}), 404
+
+
+# =============================== listing_customer crud ===================================
+
+# start
+# # listing_customer listing
+# @app.route('/listing_customer', methods=['POST'])
+# def add_listing_route():
+#     """
+#     Endpoint to add a new listing
+#     """
+#     data = request.get_json()
+#     name = data['name']
+#     price = data['price']
+#     description = data['description']
+#     category_id = data['category_id']
+#     broker_id = data['broker_id']
+#     create_listing(name, price, description, category_id, broker_id)
+#     return jsonify({'message': "created listing successfully"}), 201
+
+
+# # Read listing
+# @app.route('/listing', methods=['GET'])
+# def get_all_listings_route():
+#     """
+#     Should return a list of X number of listings based on a LIMIT
+#     """
+#     listings = view_listing()
+#     new_listing = format_listing(listings)
+#     return jsonify(new_listing), 200
+
+
+# # Read listing by id
+# @app.route('/listing/<int:id>', methods=['GET'])
+# def listing_detail_route(id):
+#     """
+#     Endpoint to return a specific listing
+#     """
+#     selected_listing = view_listing_by_id(id)
+#     new_listing = format_listing(selected_listing)
+#     return jsonify(new_listing), 200
+
+
+# # Update listing
+# @app.route('/listing/<int:id>', methods=['PUT'])
+# def update_listing_route(id):
+#     """
+#     Endpoint to update an existing listing
+#     """
+#     data = request.get_json()  # Hämtar data från Postman
+#     name = data['name']
+#     price = data['price']
+#     description = data['description']
+#     category_id = data['category_id']
+#     broker_id = data['broker_id']
+
+#     success = update_listing(
+#         id, name, price, description, category_id, broker_id)
+
+#     if success == True:
+#         return jsonify({'message': "Updated listing successfully"}), 200
+#     else:
+#         return jsonify({'message': "Failed to update listing"}), 400
+
+
+# # Delete listing
+# @app.route('/listing/<id>', methods=['DELETE'])
+# def remove_listing_route(id):
+#     """
+#     Endpoint to remove a listing
+#     """
+#     delete_listing(id)
+#     return jsonify({'message': "deleted listing successfully"}), 200
+
+
+# =============================== END ===================================
 
 
 # # Update single listing
@@ -172,16 +452,6 @@ def remove_customer():
     Get customer ID from customer and call db.delete_customer
     """
     pass
-
-
-@app.route('/customer', methods=['GET'])
-def get_all_customer_route():
-    """
-    Endpoint to list all customer
-    """
-    customers = view_customer()
-    new_customer = format_customer(customers)
-    return jsonify(new_customer), 200
 
 
 def schedule_appointment():

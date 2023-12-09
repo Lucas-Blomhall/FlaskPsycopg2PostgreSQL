@@ -23,8 +23,11 @@ def get_db_connection():
 table_name = "broker"
 
 
-def create_table():
-    create_todo_query = """"""
+# def create_table():
+#     create_todo_query = """"""
+
+
+# ==================================== creating tables =======================================================
 
 
 def create_tables():
@@ -118,9 +121,11 @@ else:
 print(f"Table {table_name} exists: {check_if_exists(table_name)}")
 
 
-# Starting CRUD:
+# ==================================== Starting CRUD =======================================================
 
-# Listing: CRUD:
+
+# ==================================== listing CRUD =======================================================
+
 
 # Create a listing:
 def create_listing(name, price, description, category_id, broker_id):
@@ -187,14 +192,9 @@ def update_listing(id, name, price, description, category_id, broker_id):
                 conn.rollback()
                 return False
 
+# get listing by id
 
-# # Get a listing by id kommer tillbaka och fixar för specifik id
-# id SERIAL PRIMARY KEY
-# name VARCHAR(255) NOT NULL,
-# price INT NOT NULL,
-# description VARCHAR(255),
-# category_id INT REFERENCES category(id),
-# broker_id INT REFERENCES category(id)
+
 def view_listing_by_id(id):
     """Retrieves details of a specific listing along with category and broker information."""
     # Implement the SQL query to retrieve listing details with JOIN
@@ -209,7 +209,7 @@ def view_listing_by_id(id):
                 return False
 
 
-# Category: CRUD
+# ==================================== Category CRUD =======================================================
 
 # Create Category
 def create_category(name):
@@ -227,6 +227,36 @@ def create_category(name):
                 return False
 
 
+# Read all from category:
+def view_category():
+    """Retrieves details of a specific category along with category and broker information."""
+    # Implement the SQL query to retrieve listing details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM category ORDER BY id ASC")
+                print("Got all data from category successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+
+# Get a category by id
+def view_category_by_id(id):
+    """Retrieves details of a specific category along with category and broker information."""
+    # Implement the SQL query to retrieve category details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM category WHERE id = %s", (id,))
+                print("Got specific category by id successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+
 # Update a category by id
 def update_category(id, name):
     """Updates an existing category."""
@@ -234,15 +264,37 @@ def update_category(id, name):
         with conn.cursor() as cur:
             try:
                 cur.execute(
-                    "Update category SET title = %s, description = %s, WHERE id = %s", (id, name))
+                    "UPDATE category SET name = %s WHERE id = %s", (name, id))
                 conn.commit()
                 print("Updated category by id successfully")
+                return True
             except psycopg2.Error as e:
                 print("Error: ", e)
+                conn.rollback()
                 return False
 
 
-# broker: CRUD
+# Delete a category by id
+def delete_category(id):
+    """Deletes a category from the database."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("DELETE FROM category WHERE id = %s", (id,))
+                affected_rows = cur.rowcount  # Get the number of affected rows
+                conn.commit()
+                print("Deleted category successfully")
+                return affected_rows > 0  # Return True if any rows were deleted
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+            # BONUS we add so that we can delete the parent id for child ids
+
+
+# ==================================== broker CRUD =======================================================
+
 
 # Create a broker
 def create_broker(name, email, contact_info):
@@ -253,10 +305,40 @@ def create_broker(name, email, contact_info):
                 cur.execute(
                     "INSERT INTO broker (name, email, contact_info) VALUES (%s, %s, %s)", (name, email, contact_info))
                 conn.commit()
-                print("Created category successfully")
+                print("Created broker successfully")
             except psycopg2.Error as e:
                 print("Error: ", e)
                 conn.rollback()
+                return False
+
+
+# Read broker
+def view_broker():
+    """Retrieves details of a specific broker along with category and broker information."""
+    # Implement the SQL query to retrieve broker details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM broker ORDER BY id ASC")
+                print("Got all broker successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+
+# Read broker by id
+def view_broker_by_id(id):
+    """Retrieves details of a specific listing along with category and broker information."""
+    # Implement the SQL query to retrieve broker details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM broker WHERE id = %s", (id,))
+                print("Got specific broker by id successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
                 return False
 
 
@@ -267,12 +349,34 @@ def update_broker(id, name, email, contact_info):
         with conn.cursor() as cur:
             try:
                 cur.execute(
-                    "Update broker SET name = %s, email = %s, contact_info = %s, WHERE id = %s", (id, name, email, contact_info))
+                    "UPDATE broker SET name = %s, email = %s, contact_info = %s WHERE id = %s", (name, email, contact_info, id))
                 conn.commit()
-                print("Updated category by id successfully")
+                print("Updated broker by id successfully")
+                return True
             except psycopg2.Error as e:
                 print("Error: ", e)
+                conn.rollback()
                 return False
+
+
+# Delete broker by id
+def delete_broker(id):
+    """Deletes a broker from the database."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("DELETE FROM broker WHERE id = %s", (id,))
+                affected_rows = cur.rowcount  # Get the number of affected rows
+                conn.commit()
+                print("Deleted broker successfully")
+                return affected_rows > 0  # Return True if any rows were deleted
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+
+# ==================================== customer CRUD =======================================================
 
 
 # create a customer
@@ -305,22 +409,56 @@ def view_customer():
                 print("Error: ", e)
                 return False
 
-# UPDATE customer
+
+# Read customer by id
+def view_customer_by_id(id):
+    """Retrieves details of a specific customer along with customer and customer information."""
+    # Implement the SQL query to retrieve customer details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM customer WHERE id = %s", (id,))
+                print("Got specific customer by id successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
 
 
+# Update a customer by id
+def update_customer(id, name, email, contact_info):
+    """Updates an existing customer."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "UPDATE customer SET name = %s, email = %s, contact_info = %s WHERE id = %s", (name, email, contact_info, id))
+                conn.commit()
+                print("Updated customer by id successfully")
+                return True
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+
+# Delete a customer by id
 def delete_customer(id):
     """Deletes a customer from the database."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
-                cur.execute(
-                    "DELETE FROM customer WHERE id = %s", (id,))
+                cur.execute("DELETE FROM customer WHERE id = %s", (id,))
+                affected_rows = cur.rowcount  # Get the number of affected rows
                 conn.commit()
                 print("Deleted customer successfully")
+                return affected_rows > 0  # Return True if any rows were deleted
             except psycopg2.Error as e:
                 print("Error: ", e)
                 conn.rollback()
                 return False
+
+# ================================= END ================================================
 
 
 def create_appointment(listing_id, customer_id, appointments):
