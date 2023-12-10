@@ -39,7 +39,7 @@ def create_tables():
         with conn.cursor() as cur:
             create_broker = """
             CREATE TABLE IF NOT EXISTS broker(
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) CHECK(email LIKE '%@%') UNIQUE,
             contact_info VARCHAR(20)
@@ -47,13 +47,13 @@ def create_tables():
             """
             create_category = """
             CREATE TABLE IF NOT EXISTS category(
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
             name VARCHAR(255) UNIQUE NOT NULL,
             );
             """
             create_customer = """
             CREATE TABLE IF NOT EXISTS customer(
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) CHECK(email LIKE '%@%') UNIQUE,
             contact_info VARCHAR(20)
@@ -61,7 +61,7 @@ def create_tables():
             """
             create_listing = """
             CREATE TABLE IF NOT EXISTS listing(
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             price INT NOT NULL,
             description VARCHAR(255),
@@ -74,6 +74,13 @@ def create_tables():
             listing_id INT,
             customer_id INT,
             appointments BOOLEAN,
+            PRIMARY KEY(listing_id, customer_id)
+            );
+            """
+            create_customer_favorute_listing = """
+            CREATE TABLE IF NOT EXISTS listing_customer(
+            listing_id INT,
+            customer_id INT,
             favorite_residence BOOLEAN
             PRIMARY KEY(listing_id, customer_id)
             );
@@ -84,6 +91,7 @@ def create_tables():
                 cur.execute(create_customer)
                 cur.execute(create_listing)
                 cur.execute(create_listing_customer)
+                cur.execute(create_customer_favorute_listing)
                 # extra table för favorit
                 conn.commit()
                 print("Created table successfully in PostgreSQL")
@@ -114,7 +122,7 @@ def check_if_exists(table_name):
 
 print(f"Table {table_name} exists: {check_if_exists(table_name)}")
 if check_if_exists(table_name) == False:
-    create_table()
+    create_tables()
 else:
     print("Table already exists")
 
@@ -209,7 +217,7 @@ def view_listing_by_id(id):
                 return False
 
 
-# ==================================== Category CRUD =======================================================
+# ==================================== category CRUD =======================================================
 
 # Create Category
 def create_category(name):
@@ -242,7 +250,7 @@ def view_category():
                 return False
 
 
-# Get a category by id
+# Read a category by id
 def view_category_by_id(id):
     """Retrieves details of a specific category along with category and broker information."""
     # Implement the SQL query to retrieve category details with JOIN
@@ -312,7 +320,7 @@ def create_broker(name, email, contact_info):
                 return False
 
 
-# Read broker
+# Read all from broker
 def view_broker():
     """Retrieves details of a specific broker along with category and broker information."""
     # Implement the SQL query to retrieve broker details with JOIN
@@ -379,7 +387,7 @@ def delete_broker(id):
 # ==================================== customer CRUD =======================================================
 
 
-# create a customer
+# Create a customer
 def create_customer(name, email, contact_info):
     """Creates a new customer in the database."""
     with get_db_connection() as conn:
@@ -461,14 +469,21 @@ def delete_customer(id):
 # ================================= END ================================================
 
 
-def create_appointment(listing_id, customer_id, appointments):
+# ================================= START OF THE 2 JUNCTION TABLES ================================================
+
+
+# ================================= listing_customer crud ================================================
+
+
+# Create listing_customer
+def create_appointment(listing_id, customer_id, appointment):
     """Creates a new viewing appointment."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
                 cur.execute(
-                    "INSERT INTO listing_customer (listing_id, customer_id, appointments) VALUES (%s, %s)", (
-                        listing_id, customer_id, appointments)
+                    "INSERT INTO listing_customer (listing_id, customer_id, appointment) VALUES (%s, %s)", (
+                        listing_id, customer_id, appointment)
                 )
                 conn.commit()
                 print("Created an appointment in listing_customer successfully")
@@ -478,20 +493,54 @@ def create_appointment(listing_id, customer_id, appointments):
                 return False
 
 
-def remove_appointment(listing_id, customer_id):
-    """Removes an appointment."""
+# Read listing_customer
+def view_listing_customer():
+    """Retrieves details of a specific listing along with category and broker information."""
+    # Implement the SQL query to retrieve listing details with JOIN
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
-                cur.execute(
-                    "DELETE FROM listing_customer WHERE listing_id = %s AND customer_id = %s", (listing_id, customer_id))
-                print("Deleted an appointment from listing_customer")
+                # (extra) ORDER BY id ASC
+                cur.execute("SELECT * FROM listing_customer")
+                print("Got all listing_customer successfully")
                 return cur.fetchall()  # Den returnar alla todos
             except psycopg2.Error as e:
                 print("Error: ", e)
                 return False
 
 
+# Read listing_customer by id 2
+def view_listing_customer_by_id(customer_id):
+    """Retrieves all appointments from listing_customer for a specific customer."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "SELECT * FROM listing_customer WHERE customer_id = %s", (customer_id,))
+                print("Update an appointment from listing_customer")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+# Read listing_customer by id
+
+
+def view_customer_by_id(id):
+    """Retrieves details of a specific customer along with customer and customer information."""
+    # Implement the SQL query to retrieve customer details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM customer WHERE id = %s", (id,))
+                print("Got specific customer by id successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+
+# Update listing_customer
 def update_appointment(listing_id, customer_id, appointments):
     """Updates an appointment"""
     with get_db_connection() as conn:
@@ -506,14 +555,15 @@ def update_appointment(listing_id, customer_id, appointments):
                 return False
 
 
-def view_appointments_for_customer(listing_id, customer_id):
-    """Retrieves all appointments for a specific customer."""
+# Delete listing_customer
+def remove_appointment(listing_id, customer_id):
+    """Removes an appointment."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
                 cur.execute(
-                    "SELECT * FROM listing_customer WHERE customer_id = %s", (listing_id, customer_id))
-                print("Update an appointment from listing_customer")
+                    "DELETE FROM listing_customer WHERE listing_id = %s AND customer_id = %s", (listing_id, customer_id))
+                print("Deleted an appointment from listing_customer")
                 return cur.fetchall()  # Den returnar alla todos
             except psycopg2.Error as e:
                 print("Error: ", e)
