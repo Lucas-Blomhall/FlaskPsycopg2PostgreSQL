@@ -509,7 +509,7 @@ def view_listing_customer():
                 return False
 
 
-# Read listing_customer by id 2
+# Read listing_customer by id
 def view_listing_customer_by_id(customer_id):
     """Retrieves all appointments from listing_customer for a specific customer."""
     with get_db_connection() as conn:
@@ -523,40 +523,26 @@ def view_listing_customer_by_id(customer_id):
                 print("Error: ", e)
                 return False
 
-# Read listing_customer by id
-
-
-def view_customer_by_id(id):
-    """Retrieves details of a specific customer along with customer and customer information."""
-    # Implement the SQL query to retrieve customer details with JOIN
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            try:
-                cur.execute("SELECT * FROM customer WHERE id = %s", (id,))
-                print("Got specific customer by id successfully")
-                return cur.fetchall()  # Den returnar alla todos
-            except psycopg2.Error as e:
-                print("Error: ", e)
-                return False
-
 
 # Update listing_customer
-def update_appointment(listing_id, customer_id, appointments):
-    """Updates an appointment"""
+def update_listing_customer(appointments, listing_id, customer_id):
+    """Updates an listing_customer"""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
                 cur.execute(
-                    "Update listing_customer SET appointments = %s, WHERE listing_id = %s AND customer_id = %s", (listing_id, customer_id, appointments))
+                    "Update listing_customer SET appointments = %s WHERE listing_id = %s AND customer_id = %s", (appointments, listing_id, customer_id))
                 print("Update an appointment from listing_customer")
-                return cur.fetchall()  # Den returnar alla todos
+                # Den kollar om någon rad blev påverkad av våran query. Om det blev det så returnerar det True!
+                return cur.rowcount > 0
             except psycopg2.Error as e:
                 print("Error: ", e)
+                conn.rollback()
                 return False
 
 
 # Delete listing_customer
-def remove_appointment(listing_id, customer_id):
+def remove_listing_customer(customer_id, listing_id):
     """Removes an appointment."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -564,10 +550,66 @@ def remove_appointment(listing_id, customer_id):
                 cur.execute(
                     "DELETE FROM listing_customer WHERE listing_id = %s AND customer_id = %s", (listing_id, customer_id))
                 print("Deleted an appointment from listing_customer")
+                return cur.rowcount > 0  # Return True if any rows were deleted
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+
+# ================================= customer_favorute_listing crud ================================================
+
+
+# Create customer_favorute_listing
+def create_customer_favorute_listing(listing_id, customer_id, favorite_residence):
+    """Creates a new customer_favorute_listing."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "INSERT INTO customer_favorute_listing (listing_id, customer_id, favorite_residence) VALUES (%s, %s, %s)", (
+                        listing_id, customer_id, favorite_residence)
+                )
+                conn.commit()
+                print(
+                    "Created an favorite_residence in customer_favorute_listing successfully")
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+
+# Read customer_favorute_listing
+def view_customer_favorute_listing():
+    """Retrieves details of a specific listing along with category and broker information."""
+    # Implement the SQL query to retrieve listing details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                # (extra) ORDER BY id ASC
+                cur.execute("SELECT * FROM customer_favorute_listing")
+                print("Got all customer_favorute_listing successfully")
                 return cur.fetchall()  # Den returnar alla todos
             except psycopg2.Error as e:
                 print("Error: ", e)
                 return False
+
+
+# Read customer_favorute_listing by id
+def view_customer_favorute_listing_by_id(customer_id):
+    """Retrieves all appointments from customer_favorute_listing for a specific customer."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "SELECT * FROM customer_favorute_listing WHERE customer_id = %s", (customer_id,))
+                print("Update an appointment from customer_favorute_listing")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+# ================================= END ================================================
 
 
 def favorite_listing(connection):

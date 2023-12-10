@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from database import create_appointment, create_broker, create_category, create_customer, create_listing, delete_broker, delete_category, delete_customer, update_broker, update_category, update_customer, update_listing, view_broker, view_broker_by_id, view_category, view_category_by_id, view_customer, view_customer_by_id, view_listing, delete_listing, view_listing_by_id, view_listing_customer, view_listing_customer_by_id
+from database import create_appointment, create_broker, create_category, create_customer, create_customer_favorute_listing, create_listing, delete_broker, delete_category, delete_customer, remove_listing_customer, update_broker, update_category, update_customer, update_listing, update_listing_customer, view_broker, view_broker_by_id, view_category, view_category_by_id, view_customer, view_customer_by_id, view_customer_favorute_listing, view_customer_favorute_listing_by_id, view_listing, delete_listing, view_listing_by_id, view_listing_customer, view_listing_customer_by_id
 
 app = Flask(__name__)
 
@@ -59,6 +59,15 @@ def format_listing_customer(listing_customers):
         'customer_id': listing_customer['customer_id'],
         'appointments': listing_customer['appointments']
     } for listing_customer in listing_customers]
+
+
+# customer_favorute_listing
+def format_customer_favorute_listing(customer_favorute_listings):
+    return [{
+        'listing_id': customer_favorute_listing['listing_id'],
+        'customer_id': customer_favorute_listing['customer_id'],
+        'favorite_residence': customer_favorute_listing['favorite_residence']
+    } for customer_favorute_listing in customer_favorute_listings]
 
 
 # =========================================== CRUD operation START =================================================
@@ -387,23 +396,98 @@ def listing_customer_detail_route(customer_id):
 
 
 # Update listing_customer
-@app.route('/listing_customer/<int:id>', methods=['PUT'])
-def update_listing_customer_route(id):
+@app.route('/listing_customer/<int:customer_id>/<int:listing_id>', methods=['PUT'])
+def update_listing_customer_route(customer_id, listing_id):
     """
     Endpoint to update an existing customer
     """
     data = request.get_json()  # Hämtar data från Postman
-    name = data['name']
-    email = data['email']
-    contact_info = data['contact_info']
+    appointments = data['appointments']
 
-    success = update_customer(
-        id, name, email, contact_info)
+    success = update_listing_customer(
+        appointments, listing_id, customer_id)
 
     if success == True:
-        return jsonify({'message': "Updated customer successfully"}), 200
+        return jsonify({'message': "Updated listing_customer successfully"}), 200
     else:
-        return jsonify({'message': "Failed to update customer"}), 400
+        return jsonify({'message': "Failed to update listing_customer"}), 400
+
+
+# Delete listing_customer by id
+@app.route('/listing_customer/<int:customer_id>/<int:listing_id>', methods=['DELETE'])
+def remove_listing_customer_route(customer_id, listing_id):
+    """
+    Endpoint to remove a customer
+    """
+    if remove_listing_customer(customer_id, listing_id):
+        return jsonify({'message': "Deleted customer successfully"}), 200
+    else:
+        return jsonify({'message': "Customer not found or deletion failed"}), 404
+
+
+# =============================== customer_favorute_listing crud ===================================
+
+
+# Create customer_favorute_listing
+@app.route('/customer_favorute_listing', methods=['POST'])
+def add_customer_favorute_listing_route():
+    """
+    Endpoint to add a new customer_favorute_listing
+    Get customer_favorute_listing details from customer_favorute_listing and call db.customer_favorute_listing
+    """
+    data = request.get_json()
+    listing_id = data['listing_id']
+    customer_id = data['customer_id']
+    favorite_residence = data['favorite_residence']
+    create_customer_favorute_listing(
+        listing_id, customer_id, favorite_residence)
+    return jsonify({'message': "created customer_favorute_listing successfully"}), 201
+
+
+# Read all from customer_favorute_listing
+@app.route('/customer_favorute_listing', methods=['GET'])
+def get_all_customer_favorute_listing_route():
+    """
+    Endpoint to list all customer_favorute_listing
+    """
+    customer_favorute_listings = view_customer_favorute_listing()
+    new_customer_favorute_listings = format_customer_favorute_listing(
+        customer_favorute_listings)
+    return jsonify(new_customer_favorute_listings), 200
+
+
+# Read customer_favorute_listing by customer_id
+@app.route('/customer_favorute_listing/<int:customer_id>', methods=['GET'])
+def customer_favorute_listing_detail_route(customer_id):
+    """
+    Endpoint to return all appointments from listing_customer for a specific customer
+    """
+    selected_customer_favorute_listing = view_customer_favorute_listing_by_id(
+        customer_id)
+    new_customer_favorute_listing = format_customer_favorute_listing(
+        selected_customer_favorute_listing)
+    return jsonify(new_customer_favorute_listing), 200
+
+
+# Update listing_customer
+@app.route('/listing_customer/<int:customer_id>/<int:listing_id>', methods=['PUT'])
+def update_listing_customer_route(customer_id, listing_id):
+    """
+    Endpoint to update an existing customer
+    """
+    data = request.get_json()  # Hämtar data från Postman
+    appointments = data['appointments']
+
+    success = update_listing_customer(
+        appointments, listing_id, customer_id)
+
+    if success == True:
+        return jsonify({'message': "Updated listing_customer successfully"}), 200
+    else:
+        return jsonify({'message': "Failed to update listing_customer"}), 400
+
+
+# =============================== END ===================================
 
 
 # start
