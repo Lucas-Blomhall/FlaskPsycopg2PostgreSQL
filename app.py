@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from database import create_appointment, create_broker, create_category, create_customer, create_customer_favorute_listing, create_listing, delete_broker, delete_category, delete_customer, remove_listing_customer, update_broker, update_category, update_customer, update_listing, update_listing_customer, view_broker, view_broker_by_id, view_category, view_category_by_id, view_customer, view_customer_by_id, view_customer_favorute_listing, view_customer_favorute_listing_by_id, view_listing, delete_listing, view_listing_by_id, view_listing_customer, view_listing_customer_by_id
+from database import create_appointment, create_broker, create_category, create_customer, create_customer_favorute_listing, create_listing, delete_broker, delete_category, delete_customer, remove_customer_favorute_listing, remove_listing_customer, update_broker, update_category, update_customer, update_customer_favorute_listing, update_listing, update_listing_customer, view_broker, view_broker_by_id, view_category, view_category_by_id, view_customer, view_customer_by_id, view_customer_favorute_listing, view_customer_favorute_listing_by_id, view_listing, delete_listing, view_listing_by_id, view_listing_customer, view_listing_customer_by_id
 
 app = Flask(__name__)
 
@@ -469,22 +469,34 @@ def customer_favorute_listing_detail_route(customer_id):
     return jsonify(new_customer_favorute_listing), 200
 
 
-# Update listing_customer
-@app.route('/listing_customer/<int:customer_id>/<int:listing_id>', methods=['PUT'])
-def update_listing_customer_route(customer_id, listing_id):
+# Update customer_favorute_listing
+@app.route('/customer_favorute_listing/<int:customer_id>/<int:listing_id>', methods=['PUT'])
+def update_customer_favorute_listing_route(customer_id, listing_id):
     """
-    Endpoint to update an existing customer
+    Endpoint to update an existing customer_favorute_listing
     """
     data = request.get_json()  # Hämtar data från Postman
-    appointments = data['appointments']
+    favorite_residence = data['favorite_residence']
 
-    success = update_listing_customer(
-        appointments, listing_id, customer_id)
+    success = update_customer_favorute_listing(
+        favorite_residence, listing_id, customer_id)
 
     if success == True:
-        return jsonify({'message': "Updated listing_customer successfully"}), 200
+        return jsonify({'message': "Updated customer_favorute_listing successfully"}), 200
     else:
-        return jsonify({'message': "Failed to update listing_customer"}), 400
+        return jsonify({'message': "Failed to update customer_favorute_listing"}), 400
+
+
+# Delete customer_favorute_listing by id
+@app.route('/customer_favorute_listing/<int:customer_id>/<int:listing_id>', methods=['DELETE'])
+def remove_customer_favorute_listing_route(customer_id, listing_id):
+    """
+    Endpoint to remove a customer
+    """
+    if remove_customer_favorute_listing(customer_id, listing_id):
+        return jsonify({'message': "Deleted customer_favorute_listing successfully"}), 200
+    else:
+        return jsonify({'message': "customer_favorute_listing not found or deletion failed"}), 404
 
 
 # =============================== END ===================================

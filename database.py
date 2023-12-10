@@ -609,6 +609,39 @@ def view_customer_favorute_listing_by_id(customer_id):
                 print("Error: ", e)
                 return False
 
+
+# Update customer_favorute_listing
+def update_customer_favorute_listing(favorite_residence, listing_id, customer_id):
+    """Updates an customer_favorute_listing"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "Update customer_favorute_listing SET favorite_residence = %s WHERE listing_id = %s AND customer_id = %s", (favorite_residence, listing_id, customer_id))
+                print("Update an appointment from customer_favorute_listing")
+                # Den kollar om någon rad blev påverkad av våran query. Om det blev det så returnerar det True!
+                return cur.rowcount > 0
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
+
+# Delete customer_favorute_listing
+def remove_customer_favorute_listing(customer_id, listing_id):
+    """Removes an appointment."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "DELETE FROM customer_favorute_listing WHERE listing_id = %s AND customer_id = %s", (listing_id, customer_id))
+                print("Deleted an appointment from customer_favorute_listing")
+                return cur.rowcount > 0  # Return True if any rows were deleted
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                conn.rollback()
+                return False
+
 # ================================= END ================================================
 
 
