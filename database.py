@@ -152,23 +152,7 @@ def create_listing(name, price, description, category_id, broker_id):
                 return False
 
 
-# Delete a listing
-def delete_listing(id):
-    """Deletes a listing from the database."""
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            try:
-                cur.execute(
-                    "DELETE FROM listing WHERE id = %s", (id,))
-                conn.commit()
-                print("Deleted listing successfully")
-            except psycopg2.Error as e:
-                print("Error: ", e)
-                conn.rollback()
-                return False
-
-
-# Get a listing
+# Get all from listing
 def view_listing():
     """Retrieves details of a specific listing along with category and broker information."""
     # Implement the SQL query to retrieve listing details with JOIN
@@ -177,6 +161,21 @@ def view_listing():
             try:
                 cur.execute("SELECT * FROM listing ORDER BY id ASC")
                 print("Got all listing successfully")
+                return cur.fetchall()  # Den returnar alla todos
+            except psycopg2.Error as e:
+                print("Error: ", e)
+                return False
+
+
+# get listing by id
+def view_listing_by_id(id):
+    """Retrieves details of a specific listing along with category and broker information."""
+    # Implement the SQL query to retrieve listing details with JOIN
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("SELECT * FROM listing WHERE id = %s", (id,))
+                print("Got specific listing by id successfully")
                 return cur.fetchall()  # Den returnar alla todos
             except psycopg2.Error as e:
                 print("Error: ", e)
@@ -200,20 +199,20 @@ def update_listing(id, name, price, description, category_id, broker_id):
                 conn.rollback()
                 return False
 
-# get listing by id
 
-
-def view_listing_by_id(id):
-    """Retrieves details of a specific listing along with category and broker information."""
-    # Implement the SQL query to retrieve listing details with JOIN
+# Delete a listing
+def delete_listing(id):
+    """Deletes a listing from the database."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
-                cur.execute("SELECT * FROM listing WHERE id = %s", (id,))
-                print("Got specific listing by id successfully")
-                return cur.fetchall()  # Den returnar alla todos
+                cur.execute(
+                    "DELETE FROM listing WHERE id = %s", (id,))
+                conn.commit()
+                print("Deleted listing successfully")
             except psycopg2.Error as e:
                 print("Error: ", e)
+                conn.rollback()
                 return False
 
 
